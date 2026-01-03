@@ -3,6 +3,10 @@ build/
 .build/
 *.xcframework/
 Sources/CJuceTracktion/extra/
+Derived/
+
+# Generated audio files
+/*.wav
 
 # Xcode
 *.xcodeproj

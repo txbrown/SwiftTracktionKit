@@ -2,7 +2,7 @@
 
 #include "EngineHelpers.h"
 #include <cstdint>
-#include <swift/bridging>
+#include "SwiftBridgingCompat.h"
 
 struct MidiNote
 {
@@ -33,9 +33,9 @@ namespace MidiNoteUtils
 {
   inline MidiNote fromTracktionNote(const te::MidiNote &note)
   {
-    return MidiNote(note.getStartBeat().inBeats(),
+    return MidiNote(note.getNoteNumber(),
+                    note.getStartBeat().inBeats(),
                     note.getLengthBeats().inBeats(),
-                    note.getNoteNumber(),
                     note.getVelocity(),
                     note.getColour(),
                     note.isMute());

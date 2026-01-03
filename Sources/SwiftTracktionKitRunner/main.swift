@@ -1,66 +1,62 @@
-import CJuceTracktion
 import SwiftTracktionKit
 import SwiftUI
 
 class Demo: ObservableObject {
     public let audioEngineManager: AudioEngineManager
-    private var trackManager: TrackManager
-    private var midiClipManager: MidiClipManager
+    private var trackManager: TrackManagerWrapper
+    private var midiClipManager: MidiClipManagerWrapper
 
     public init() {
         audioEngineManager = AudioEngineManager(name: "SwiftTracktionKitRunner")
-        trackManager = TrackManager.create(audioEngineManager.getEdit())
-        midiClipManager = MidiClipManager.create(audioEngineManager.getEdit())
+        trackManager = audioEngineManager.createTrackManager()
+        midiClipManager = audioEngineManager.createMidiClipManager()
         setup()
     }
 
     private func setup() {
         audioEngineManager.enableClickTrack()
-        let midiTrackID: Int32 = trackManager.createAudioTrack(name: "MIDI Track")
+        let midiTrackID = trackManager.createAudioTrack(name: "MIDI Track")
         print("Midi Track ID: \(midiTrackID)")
 
         let midiClipID = midiClipManager
             .createMidiClip(trackID: midiTrackID, name: "MIDI Clip - Track 1", startBar: 0, lengthInBars: 8)
         print("The new midi clip id is \(midiClipID)")
 
-        // TODO: Fix me
-        // there is an error with "pthread_mutex_lock" to be fixed here
-        // don't know why it happens all of a sudden but I have no idea
-        trackManager.createSamplerPlugin(config: .init(
-            name: "Sampler 1",
+        // Demo drum samples
+        let sampleDir = "/Users/ricardoabreu/Development/oss/SwiftTracktionKit/Samples"
+        trackManager.createSamplerPlugin(config: SamplerPluginConfig(
+            name: "Demo Kit",
             trackID: Int(midiTrackID),
             samples: [
-                .init(
-                    filePath: "/users/ricardo.abreu/developer/personal/midicircuit-macos/sounds/default soundbanks/shy kit/SNS_TD_kick_premium.wav",
-                    noteNumber: 36
-                ),
-                .init(
-                    filePath: "/users/ricardo.abreu/developer/personal/midicircuit-macos/sounds/default soundbanks/shy kit/SNS_TD_snare_boom_bap.wav",
-                    noteNumber: 37
-                ),
-                .init(
-                    filePath: "/users/ricardo.abreu/developer/personal/midicircuit-macos/sounds/default soundbanks/shy kit/sns_td_hihat_punchy.wav",
-                    noteNumber: 38
-                ),
+                Sample(filePath: "\(sampleDir)/kick.wav", noteNumber: 36),
+                Sample(filePath: "\(sampleDir)/snare.wav", noteNumber: 38),
+                Sample(filePath: "\(sampleDir)/hihat.wav", noteNumber: 42),
+                Sample(filePath: "\(sampleDir)/clap.wav", noteNumber: 39),
             ]
         ))
 
-        for start in 0 ... 7 {
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 36, startBeat: Double(start), lengthInBeats: 1, velocity: 117, color: 0, mute: false))
-            if (start % 2) != 0 {
-                midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 37, startBeat: Double(start), lengthInBeats: 1, velocity: 117, color: 0, mute: false))
-            }
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: Double(start), lengthInBeats: 0.5, velocity: 88, color: 0, mute: false))
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: Double(start) + 0.5, lengthInBeats: 0.5, velocity: 92, color: 0, mute: false))
-        }
+        // Boom bap pattern - 8 bars
+        for bar in 0..<8 {
+            let barStart = Double(bar * 4)
 
-        for start in 8 ... 900 {
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 36, startBeat: Double(start), lengthInBeats: 1, velocity: 117, color: 0, mute: false))
-            if (start % 2) != 0 {
-                midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 37, startBeat: Double(start), lengthInBeats: 1, velocity: 117, color: 0, mute: false))
+            // Kick pattern: beat 1 and the "and" of beat 3
+            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 36, startBeat: barStart, lengthInBeats: 0.5, velocity: 110, color: 0, mute: false))
+            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 36, startBeat: barStart + 2.5, lengthInBeats: 0.5, velocity: 100, color: 0, mute: false))
+
+            // Snare on beats 2 and 4
+            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: barStart + 1, lengthInBeats: 0.5, velocity: 115, color: 0, mute: false))
+            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: barStart + 3, lengthInBeats: 0.5, velocity: 115, color: 0, mute: false))
+
+            // Hi-hats on every 8th note
+            for eighth in 0..<8 {
+                let velocity: UInt8 = (eighth % 2 == 0) ? 90 : 70  // Accent on downbeats
+                midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 42, startBeat: barStart + Double(eighth) * 0.5, lengthInBeats: 0.25, velocity: velocity, color: 0, mute: false))
             }
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: Double(start), lengthInBeats: 0.5, velocity: 88, color: 0, mute: false))
-            midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 38, startBeat: Double(start) + 0.5, lengthInBeats: 0.5, velocity: 92, color: 0, mute: false))
+
+            // Add a clap layered with snare on beat 4 of bars 4 and 8
+            if bar == 3 || bar == 7 {
+                midiClipManager.addNote(clipID: midiClipID, note: .init(noteNumber: 39, startBeat: barStart + 3, lengthInBeats: 0.5, velocity: 100, color: 0, mute: false))
+            }
         }
 
         print(midiClipManager.getNotes(clipID: midiClipID))
@@ -75,7 +71,7 @@ struct TracktionKitApp: App {
 
     init() {
         // We must initialise juce
-        juce.initialiseJuce_GUI()
+        JuceRuntime.initialize()
     }
 
     var body: some Scene {
@@ -83,7 +79,7 @@ struct TracktionKitApp: App {
             ContentView()
                 .environmentObject(demo.audioEngineManager)
                 .onDisappear {
-                    juce.shutdownJuce_GUI()
+                    JuceRuntime.shutdown()
                 }
         }
     }

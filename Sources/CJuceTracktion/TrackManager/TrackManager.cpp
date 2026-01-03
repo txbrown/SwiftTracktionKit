@@ -2,6 +2,23 @@
 #include <iostream>
 #include <juce_core/juce_core.h>
 
+// SamplerPluginBuilder implementation
+SamplerPluginBuilder::SamplerPluginBuilder() = default;
+SamplerPluginBuilder::~SamplerPluginBuilder() = default;
+
+void SamplerPluginBuilder::addSample(const std::string& filePath, int noteNumber) {
+    samples.emplace_back(filePath, noteNumber);
+}
+
+const std::vector<SamplerSample>& SamplerPluginBuilder::getSamples() const {
+    return samples;
+}
+
+void SamplerPluginBuilder::clear() {
+    samples.clear();
+}
+
+// TrackManager implementation
 TrackManager *TrackManager::create(te::Edit *edit)
 {
   return new TrackManager(edit);
@@ -121,6 +138,32 @@ int TrackManager::addMidiClip(int trackID, double startBar, double lengthInBars)
                                    timeRange,
                                    nullptr);
   return clip->itemID.getRawID();
+}
+
+void TrackManager::createSamplerPluginWithBuilder(int trackID, const SamplerPluginBuilder& builder)
+{
+  if (!edit)
+    return;
+
+  auto targetTrack = te::findTrackForID(*edit, te::EditItemID::fromRawID(trackID));
+  if (!targetTrack)
+    return;
+
+  auto *audioTrack = dynamic_cast<te::AudioTrack *>(targetTrack);
+  if (!audioTrack)
+    return;
+
+  if (auto sampler = dynamic_cast<te::SamplerPlugin *>(edit->getPluginCache().createNewPlugin(te::SamplerPlugin::xmlTypeName, {}).get()))
+  {
+    audioTrack->pluginList.insertPlugin(sampler, 0, nullptr);
+
+    for (const auto &sample : builder.getSamples())
+    {
+      const auto error = sampler->addSound(sample.filePath, sample.filePath, 0.0, 0.0, 1.0f);
+      sampler->setSoundParams(sampler->getNumSounds() - 1, sample.noteNumber, sample.noteNumber, sample.noteNumber);
+      jassert(error.isEmpty());
+    }
+  }
 }
 
 void TrackManager::createSamplerPlugin(int trackID, std::vector<std::string> defaultSampleFiles)

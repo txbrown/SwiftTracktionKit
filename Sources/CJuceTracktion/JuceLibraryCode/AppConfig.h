@@ -18,6 +18,9 @@
 
 // (You can add your own code in this section, and the Projucer will not overwrite it)
 
+// Enable iOS audio logging for debugging
+#define JUCE_IOS_AUDIO_LOGGING 1
+
 // [END_USER_CODE_SECTION]
 
 #define JUCE_PROJUCER_VERSION 0x80006

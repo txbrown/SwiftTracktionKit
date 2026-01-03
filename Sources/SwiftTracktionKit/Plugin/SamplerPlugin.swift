@@ -1,8 +1,6 @@
-import CJuceTracktion
-
 public struct Sample {
-    let filePath: String
-    let noteNumber: Int
+    public let filePath: String
+    public let noteNumber: Int
 
     public init(
         filePath: String,
@@ -14,9 +12,9 @@ public struct Sample {
 }
 
 public struct SamplerPluginConfig {
-    let name: String
-    let trackID: Int
-    let samples: [Sample]
+    public let name: String
+    public let trackID: Int
+    public let samples: [Sample]
 
     public init(
         name: String,
@@ -26,12 +24,5 @@ public struct SamplerPluginConfig {
         self.name = name
         self.trackID = trackID
         self.samples = samples
-    }
-}
-
-public extension TrackManager {
-    func createSamplerPlugin(config: SamplerPluginConfig) {
-        let defaultSampleFiles = config.samples.map { std.string($0.filePath) }
-        createSamplerPlugin(trackID: Int32(config.trackID), defaultSampleFiles: .init(defaultSampleFiles))
     }
 }

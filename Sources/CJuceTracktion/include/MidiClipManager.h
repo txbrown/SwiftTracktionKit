@@ -3,7 +3,7 @@
 #include "CJuceTracktionExport.h"
 #include "EngineHelpers.h"
 #include "MidiNote.h"
-#include "swift/bridging"
+#include "SwiftBridgingCompat.h"
 #include <string>
 #include <tracktion_engine/tracktion_engine.h>
 #include <vector>

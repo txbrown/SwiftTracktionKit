@@ -42,15 +42,30 @@ AudioEngine::AudioEngine(const std::string &name)
     std::cout << "Temp project created." << std::endl;
 
     edit = std::make_unique<te::Edit>(*engine, te::Edit::EditRole::forEditing);
-    // edit = te::Edit::createSingleTrackEdit(*engine, te::Edit::EditRole::forEditing);
     std::cout << "Edit created." << std::endl;
+
+    // Ensure we have at least one audio track for proper audio routing
+    edit->ensureNumberOfAudioTracks(1);
+    std::cout << "Audio tracks: " << te::getAudioTracks(*edit).size() << std::endl;
     for (auto &midiIn : engine->getDeviceManager().getMidiInDevices())
     {
       midiIn->setEnabled(true);
       midiIn->setMonitorMode(te::InputDevice::MonitorMode::automatic);
     }
 
-    // edit->playInStopEnabled = true;
+    // Enable looping so click track keeps playing
+    auto& transport = edit->getTransport();
+    transport.setLoopRange(te::TimeRange(te::TimePosition::fromSeconds(0.0),
+                                          te::TimePosition::fromSeconds(4.0)));
+    transport.looping = true;
+
+    // Pre-allocate the playback context so audio routing is ready
+    transport.ensureContextAllocated();
+    std::cout << "Playback context allocated: " << (transport.isPlayContextActive() ? "yes" : "no") << std::endl;
+
+    // Set click track volume to maximum
+    edit->setClickTrackVolume(1.0f);
+    std::cout << "Click track volume set to: " << edit->getClickTrackVolume() << std::endl;
   }
   catch (const std::exception &e)
   {
@@ -143,7 +158,7 @@ const bool AudioEngine::isClickTrackEnabled()
 
 void AudioEngine::enableClickTrack()
 {
-  // edit->clickTrackEnabled = true;
+  edit->clickTrackEnabled = true;
 }
 
 void AudioEngine::disableClickTrack()

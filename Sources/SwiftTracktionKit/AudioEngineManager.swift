@@ -1,4 +1,4 @@
-import CJuceTracktion
+@_implementationOnly import CJuceTracktion
 import Foundation
 
 public class AudioEngineManager: ObservableObject {
@@ -34,10 +34,26 @@ public class AudioEngineManager: ObservableObject {
     }
 
     public func getEdit() -> OpaquePointer? {
-        return cxxEngine.edit
+        return cxxEngine.getEdit()
     }
 
     public func enableClickTrack() {
         cxxEngine.enableClickTrack()
+    }
+
+    public func createTrackManager() -> TrackManagerWrapper {
+        guard let edit = cxxEngine.getEdit(),
+              let cxxTrackManager = TrackManager.create(edit) else {
+            fatalError("Failed to create TrackManager")
+        }
+        return TrackManagerWrapper(cxxTrackManager: cxxTrackManager)
+    }
+
+    public func createMidiClipManager() -> MidiClipManagerWrapper {
+        guard let edit = cxxEngine.getEdit(),
+              let cxxMidiClipManager = MidiClipManager.create(edit) else {
+            fatalError("Failed to create MidiClipManager")
+        }
+        return MidiClipManagerWrapper(cxxMidiClipManager: cxxMidiClipManager)
     }
 }

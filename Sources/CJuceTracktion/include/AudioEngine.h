@@ -2,7 +2,7 @@
 
 #include "CJuceTracktionExport.h"
 #include "EngineHelpers.h"
-#include "swift/bridging"
+#include "SwiftBridgingCompat.h"
 #include <atomic>
 #include <cassert>
 #include <memory>
@@ -26,7 +26,7 @@ public:
   const bool isClickTrackEnabled();
   void enableClickTrack();
   void disableClickTrack();
-  te::Edit *getEdit() const SWIFT_COMPUTED_PROPERTY;
+  te::Edit *getEdit() const SWIFT_RETURNS_INDEPENDENT_VALUE;
 
 private:
   AudioEngine(const std::string &name);

@@ -18,6 +18,16 @@ SwiftTracktionKit is a Swift package that provides a Swift-friendly wrapper arou
 - Swift 5.9+
 - Swift Package Manager (SPM)
 
+## Example Quickstart
+
+The example project does not include an `.xcodeproj`. Building it requires [Tuist](https://tuist.io), which can be installed with `brew install tuist`.
+
+```bash
+cd Examples/SimplePlayback-Tuist
+tuist install
+tuist generate
+```
+
 ## Installation
 
 ### Using Swift Package Manager (SPM)
